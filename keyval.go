@@ -6,7 +6,6 @@ import (
 	"10gen.com/mci/model"
 	"10gen.com/mci/plugin"
 	"10gen.com/mci/util"
-
 	"10gen.com/mci/web"
 	"fmt"
 	"github.com/10gen-labs/slogger/v1"
@@ -51,7 +50,7 @@ func (self *IncCommand) Name() string {
 	return IncCommandName
 }
 
-// ParseParams validates the input to the UpdateCommand, returning and error
+// ParseParams validates the input to the IncCommand, returning an error
 // if something is incorrect. Fulfills PluginCommand interface.
 func (incCmd *IncCommand) ParseParams(params map[string]interface{}) error {
 	err := mapstructure.Decode(params, incCmd)
@@ -67,7 +66,7 @@ func (incCmd *IncCommand) ParseParams(params map[string]interface{}) error {
 	return nil
 }
 
-// No API component, so return an empty list of api routes
+// GetRoutes returns the routes to be bound by the API server
 func (self *KeyValPlugin) GetRoutes() []plugin.PluginRoute {
 	return []plugin.PluginRoute{
 		{fmt.Sprintf("/%v", IncRoute), IncKeyHandler, []string{"POST"}},
@@ -120,7 +119,7 @@ func (incCmd *IncCommand) Execute(pluginLogger plugin.PluginLogger,
 		defer resp.Body.Close()
 	}
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("Unexpected status code: %v", resp.StatusCode)
+		return fmt.Errorf("unexpected status code: %v", resp.StatusCode)
 	}
 
 	err = util.ReadJSONInto(resp.Body, keyVal)
