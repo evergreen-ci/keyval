@@ -25,7 +25,7 @@ const (
 
 type KeyVal struct {
 	Key   string      `bson:"_id" json:"key"`
-	Value interface{} `bson:"value"`
+	Value interface{} `bson:"value" json:"value"`
 }
 
 func init() {
@@ -43,8 +43,8 @@ func (self *KeyValPlugin) Name() string {
 }
 
 type IncCommand struct {
-	Key         string `mapstructure:"key"`
-	Destination string `mapstructure:"destination"`
+	Key         string `mapstructure:"key" plugin:"expand"`
+	Destination string `mapstructure:"destination" plugin:"expand"`
 }
 
 func (self *IncCommand) Name() string {
@@ -105,6 +105,11 @@ func IncKeyHandler(request *http.Request) web.HTTPResponse {
 func (incCmd *IncCommand) Execute(pluginLogger plugin.PluginLogger,
 	pluginCom plugin.PluginCommunicator, conf *model.TaskConfig,
 	stop chan bool) error {
+
+	err := plugin.ExpandValues(incCmd, conf.Expansions)
+	if err != nil {
+		return err
+	}
 
 	keyVal := &KeyVal{}
 	resp, err := pluginCom.TaskPostJSON(IncRoute, incCmd.Key)
