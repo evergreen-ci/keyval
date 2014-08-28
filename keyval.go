@@ -42,8 +42,8 @@ func (self *KeyValPlugin) Name() string {
 }
 
 type IncCommand struct {
-	Key         string `mapstructure:"key" plugin:"expand"`
-	Destination string `mapstructure:"destination" plugin:"expand"`
+	Key         string `mapstructure:"key"`
+	Destination string `mapstructure:"destination"`
 }
 
 func (self *IncCommand) Name() string {
