@@ -59,7 +59,7 @@ func (incCmd *IncCommand) ParseParams(params map[string]interface{}) error {
 	}
 
 	if incCmd.Key == "" || incCmd.Destination == "" {
-		return fmt.Errorf("Error parsing '%v' params: key and desination may not be blank",
+		return fmt.Errorf("error parsing '%v' params: key and destination may not be blank",
 			IncCommandName)
 	}
 
@@ -115,7 +115,9 @@ func (incCmd *IncCommand) Execute(pluginLogger plugin.PluginLogger,
 	if err != nil {
 		return err
 	}
-	if resp != nil {
+	if resp == nil {
+		return fmt.Errorf("received nil response from inc API call")
+	} else {
 		defer resp.Body.Close()
 	}
 	if resp.StatusCode != http.StatusOK {
