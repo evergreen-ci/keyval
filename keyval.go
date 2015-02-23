@@ -6,7 +6,6 @@ import (
 	"10gen.com/mci/model"
 	"10gen.com/mci/plugin"
 	"10gen.com/mci/util"
-	"10gen.com/mci/web"
 	"fmt"
 	"github.com/10gen-labs/slogger/v1"
 	"github.com/mitchellh/mapstructure"
@@ -33,8 +32,12 @@ func init() {
 
 type KeyValPlugin struct{}
 
-func (self *KeyValPlugin) GetUIConfig() (*plugin.UIConfig, error) {
+func (self *KeyValPlugin) GetPanelConfig() (*plugin.PanelConfig, error) {
 	return nil, nil
+}
+
+func (self *KeyValPlugin) Configure(map[string]interface{}) error {
+	return nil
 }
 
 func (self *KeyValPlugin) Name() string {
@@ -51,7 +54,7 @@ func (self *IncCommand) Name() string {
 }
 
 // ParseParams validates the input to the IncCommand, returning an error
-// if something is incorrect. Fulfills PluginCommand interface.
+// if something is incorrect. Fulfills Command interface.
 func (incCmd *IncCommand) ParseParams(params map[string]interface{}) error {
 	err := mapstructure.Decode(params, incCmd)
 	if err != nil {
@@ -66,21 +69,26 @@ func (incCmd *IncCommand) ParseParams(params map[string]interface{}) error {
 	return nil
 }
 
+func (self *KeyValPlugin) GetUIHandler() http.Handler {
+	return nil
+}
+
 // GetRoutes returns the routes to be bound by the API server
-func (self *KeyValPlugin) GetRoutes() []plugin.PluginRoute {
-	return []plugin.PluginRoute{
-		{fmt.Sprintf("/%v", IncRoute), IncKeyHandler, []string{"POST"}},
-	}
+func (self *KeyValPlugin) GetAPIHandler() http.Handler {
+	r := http.NewServeMux()
+	r.HandleFunc("/inc", IncKeyHandler)
+	r.HandleFunc("/", http.NotFound)
+	return r
 }
 
 // IncKeyHandler increments the value stored in the given key, and returns it
-func IncKeyHandler(request *http.Request) web.HTTPResponse {
+func IncKeyHandler(w http.ResponseWriter, r *http.Request) {
 	key := ""
-
-	err := util.ReadJSONInto(request.Body, &key)
+	err := util.ReadJSONInto(r.Body, &key)
 	if err != nil {
 		mci.Logger.Logf(slogger.ERROR, "Error geting key: %v", err)
-		return web.JSONResponse{fmt.Sprintf("Error: %v", err), http.StatusInternalServerError}
+		plugin.WriteJSON(w, http.StatusInternalServerError, err.Error())
+		return
 	}
 
 	change := mgo.Change{
@@ -94,10 +102,12 @@ func IncKeyHandler(request *http.Request) web.HTTPResponse {
 	keyVal := &KeyVal{}
 	_, err = db.FindAndModify(KeyValCollection, bson.M{"_id": key}, change, keyVal)
 	if err != nil {
-		return web.JSONResponse{fmt.Sprintf("Error: %v", err), http.StatusInternalServerError}
+		mci.Logger.Logf(slogger.ERROR, "error doing findAndModify: %v", err)
+		plugin.WriteJSON(w, http.StatusInternalServerError, err.Error())
+		return
 	}
 
-	return web.JSONResponse{keyVal, http.StatusOK}
+	plugin.WriteJSON(w, http.StatusOK, keyVal)
 }
 
 // Execute fetches the expansions from the API server
@@ -133,9 +143,9 @@ func (incCmd *IncCommand) Execute(pluginLogger plugin.PluginLogger,
 	return nil
 }
 
-func (self *KeyValPlugin) NewPluginCommand(cmdName string) (plugin.PluginCommand, error) {
+func (self *KeyValPlugin) NewCommand(cmdName string) (plugin.Command, error) {
 	if cmdName == IncCommandName {
 		return &IncCommand{}, nil
 	}
-	return nil, &plugin.UnknownCommandError{cmdName}
+	return nil, &plugin.ErrUnknownCommand{cmdName}
 }
