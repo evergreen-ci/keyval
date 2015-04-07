@@ -53,6 +53,10 @@ func (self *IncCommand) Name() string {
 	return IncCommandName
 }
 
+func (self *IncCommand) Plugin() string {
+	return KeyValPluginName
+}
+
 // ParseParams validates the input to the IncCommand, returning an error
 // if something is incorrect. Fulfills Command interface.
 func (incCmd *IncCommand) ParseParams(params map[string]interface{}) error {
@@ -111,7 +115,7 @@ func IncKeyHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // Execute fetches the expansions from the API server
-func (incCmd *IncCommand) Execute(pluginLogger plugin.PluginLogger,
+func (incCmd *IncCommand) Execute(pluginLogger plugin.Logger,
 	pluginCom plugin.PluginCommunicator, conf *model.TaskConfig,
 	stop chan bool) error {
 
