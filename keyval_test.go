@@ -23,13 +23,13 @@ func TestIncKey(t *testing.T) {
 	Convey("With keyval plugin installed", t, func() {
 		err := db.Clear(keyval.KeyValCollection)
 		util.HandleTestingErr(err, t, "Couldn't clear test collection: %v")
-		registry := plugin.NewSimplePluginRegistry()
+		registry := plugin.NewSimpleRegistry()
 		kvPlugin := &keyval.KeyValPlugin{}
 		err = registry.Register(kvPlugin)
 		util.HandleTestingErr(err, t, "Couldn't register plugin: %v")
-		url, server, err := apiserver.CreateTestServer(mci.TestConfig(), nil, false)
-		httpCom := testutil.TestAgentCommunicator("mocktaskid", "mocktasksecret", url)
-		server.InstallPlugin(kvPlugin)
+
+		server, err := apiserver.CreateTestServer(mci.TestConfig(), nil, []plugin.Plugin{kvPlugin}, false)
+		httpCom := testutil.TestAgentCommunicator("mocktaskid", "mocktasksecret", server.URL)
 		sliceAppender := &mci.SliceAppender{[]*slogger.Log{}}
 		logger := agent.NewTestAgentLogger(sliceAppender)
 		taskConfig, err := testutil.CreateTestConfig("testdata/plugin_keyval.yml", t)
@@ -39,14 +39,15 @@ func TestIncKey(t *testing.T) {
 			for _, task := range taskConfig.Project.Tasks {
 				So(len(task.Commands), ShouldNotEqual, 0)
 				for _, command := range task.Commands {
-					pluginCmd, plugin, err := registry.GetPluginCommand(command, taskConfig.Project.Functions)
+					pluginCmds, err := registry.GetCommands(command, nil)
 					util.HandleTestingErr(err, t, "Couldn't get plugin command: %v")
-					So(plugin, ShouldNotBeNil)
-					So(pluginCmd, ShouldNotBeNil)
+					So(pluginCmds, ShouldNotBeNil)
 					So(err, ShouldBeNil)
-					pluginCom := &agent.TaskJSONCommunicator{plugin.Name(), httpCom}
-					err = pluginCmd.Execute(logger, pluginCom, taskConfig, make(chan bool))
-					So(err, ShouldBeNil)
+					for _, cmd := range pluginCmds {
+						pluginCom := &agent.TaskJSONCommunicator{cmd.Plugin(), httpCom}
+						err = cmd.Execute(logger, pluginCom, taskConfig, make(chan bool))
+						So(err, ShouldBeNil)
+					}
 				}
 				So(taskConfig.Expansions.Get("testkey"), ShouldEqual, "2")
 				So(taskConfig.Expansions.Get("testkey_x"), ShouldEqual, "1")

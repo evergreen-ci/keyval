@@ -22,8 +22,8 @@ const (
 )
 
 type KeyVal struct {
-	Key   string      `bson:"_id" json:"key"`
-	Value interface{} `bson:"value" json:"value"`
+	Key   string `bson:"_id" json:"key"`
+	Value int64  `bson:"value" json:"value"`
 }
 
 func init() {
@@ -143,7 +143,7 @@ func (incCmd *IncCommand) Execute(pluginLogger plugin.Logger,
 		return fmt.Errorf("Failed to read JSON reply: %v", err)
 	}
 
-	conf.Expansions.Put(incCmd.Destination, fmt.Sprintf("%v", keyVal.Value))
+	conf.Expansions.Put(incCmd.Destination, fmt.Sprintf("%d", keyVal.Value))
 	return nil
 }
 
