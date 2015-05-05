@@ -1,11 +1,11 @@
 package keyval
 
 import (
-	"10gen.com/mci"
-	"10gen.com/mci/db"
-	"10gen.com/mci/model"
-	"10gen.com/mci/plugin"
-	"10gen.com/mci/util"
+	"github.com/evergreen-ci/evergreen"
+	"github.com/evergreen-ci/evergreen/db"
+	"github.com/evergreen-ci/evergreen/model"
+	"github.com/evergreen-ci/evergreen/plugin"
+	"github.com/evergreen-ci/evergreen/util"
 	"fmt"
 	"github.com/10gen-labs/slogger/v1"
 	"github.com/mitchellh/mapstructure"
@@ -90,7 +90,7 @@ func IncKeyHandler(w http.ResponseWriter, r *http.Request) {
 	key := ""
 	err := util.ReadJSONInto(r.Body, &key)
 	if err != nil {
-		mci.Logger.Logf(slogger.ERROR, "Error geting key: %v", err)
+		evergreen.Logger.Logf(slogger.ERROR, "Error geting key: %v", err)
 		plugin.WriteJSON(w, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -106,7 +106,7 @@ func IncKeyHandler(w http.ResponseWriter, r *http.Request) {
 	keyVal := &KeyVal{}
 	_, err = db.FindAndModify(KeyValCollection, bson.M{"_id": key}, change, keyVal)
 	if err != nil {
-		mci.Logger.Logf(slogger.ERROR, "error doing findAndModify: %v", err)
+		evergreen.Logger.Logf(slogger.ERROR, "error doing findAndModify: %v", err)
 		plugin.WriteJSON(w, http.StatusInternalServerError, err.Error())
 		return
 	}
