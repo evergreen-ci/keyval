@@ -104,7 +104,7 @@ func IncKeyHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	keyVal := &KeyVal{}
-	_, err = db.FindAndModify(KeyValCollection, bson.M{"_id": key}, change, keyVal)
+	_, err = db.FindAndModify(KeyValCollection, bson.M{"_id": key}, nil, change, keyVal)
 	if err != nil {
 		evergreen.Logger.Logf(slogger.ERROR, "error doing findAndModify: %v", err)
 		plugin.WriteJSON(w, http.StatusInternalServerError, err.Error())
