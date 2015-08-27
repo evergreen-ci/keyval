@@ -32,10 +32,6 @@ func init() {
 
 type KeyValPlugin struct{}
 
-func (self *KeyValPlugin) GetPanelConfig() (*plugin.PanelConfig, error) {
-	return nil, nil
-}
-
 func (self *KeyValPlugin) Configure(map[string]interface{}) error {
 	return nil
 }
@@ -73,11 +69,7 @@ func (incCmd *IncCommand) ParseParams(params map[string]interface{}) error {
 	return nil
 }
 
-func (self *KeyValPlugin) GetUIHandler() http.Handler {
-	return nil
-}
-
-// GetRoutes returns the routes to be bound by the API server
+// GetAPIHandler returns the routes to be bound by the API server
 func (self *KeyValPlugin) GetAPIHandler() http.Handler {
 	r := http.NewServeMux()
 	r.HandleFunc("/inc", IncKeyHandler)
