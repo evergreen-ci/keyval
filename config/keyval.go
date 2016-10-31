@@ -1,3 +1,3 @@
 package config
 
-import _ "github.com/mpobrien/keyval"
+import _ "github.com/evergreen-ci/keyval"

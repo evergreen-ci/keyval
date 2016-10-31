@@ -117,22 +117,33 @@ func (incCmd *IncCommand) Execute(pluginLogger plugin.Logger,
 	}
 
 	keyVal := &KeyVal{}
-	resp, err := pluginCom.TaskPostJSON(IncRoute, incCmd.Key)
+	postFunc := util.RetriableFunc(
+		func() error {
+			resp, err := pluginCom.TaskPostJSON(IncRoute, incCmd.Key)
+			if resp != nil {
+				defer resp.Body.Close()
+			}
+			if err != nil {
+				return util.RetriableError{err}
+			}
+			if resp.StatusCode != http.StatusOK {
+				return util.RetriableError{
+					fmt.Errorf("unexpected status code: %v", resp.StatusCode),
+				}
+			}
+			err = util.ReadJSONInto(resp.Body, keyVal)
+			if err != nil {
+				return fmt.Errorf("failed to read JSON reply: %v", err)
+			}
+			return nil
+		},
+	)
+	retryFail, err := util.RetryArithmeticBackoff(postFunc, 10, 1)
+	if retryFail {
+		return fmt.Errorf("incrementing value failed after %v tries: %v", 10, err)
+	}
 	if err != nil {
 		return err
-	}
-	if resp == nil {
-		return fmt.Errorf("received nil response from inc API call")
-	} else {
-		defer resp.Body.Close()
-	}
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("unexpected status code: %v", resp.StatusCode)
-	}
-
-	err = util.ReadJSONInto(resp.Body, keyVal)
-	if err != nil {
-		return fmt.Errorf("Failed to read JSON reply: %v", err)
 	}
 
 	conf.Expansions.Put(incCmd.Destination, fmt.Sprintf("%d", keyVal.Value))
