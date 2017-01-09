@@ -2,16 +2,17 @@ package keyval
 
 import (
 	"fmt"
-	"github.com/10gen-labs/slogger/v1"
+	"net/http"
+
 	"github.com/evergreen-ci/evergreen"
 	"github.com/evergreen-ci/evergreen/db"
 	"github.com/evergreen-ci/evergreen/model"
 	"github.com/evergreen-ci/evergreen/plugin"
 	"github.com/evergreen-ci/evergreen/util"
 	"github.com/mitchellh/mapstructure"
+	"github.com/tychoish/grip/slogger"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
-	"net/http"
 )
 
 const (

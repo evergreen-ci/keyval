@@ -1,9 +1,8 @@
 package keyval_test
 
 import (
-	. "github.com/smartystreets/goconvey/convey"
+	"testing"
 
-	"github.com/10gen-labs/slogger/v1"
 	"github.com/evergreen-ci/evergreen"
 	"github.com/evergreen-ci/evergreen/agent"
 	"github.com/evergreen-ci/evergreen/db"
@@ -12,7 +11,8 @@ import (
 	"github.com/evergreen-ci/evergreen/service"
 	"github.com/evergreen-ci/evergreen/testutil"
 	"github.com/evergreen-ci/keyval"
-	"testing"
+	. "github.com/smartystreets/goconvey/convey"
+	"github.com/tychoish/grip/slogger"
 )
 
 func init() {
