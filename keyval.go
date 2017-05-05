@@ -3,6 +3,7 @@ package keyval
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/evergreen-ci/evergreen"
 	"github.com/evergreen-ci/evergreen/db"
@@ -139,7 +140,7 @@ func (incCmd *IncCommand) Execute(pluginLogger plugin.Logger,
 			return nil
 		},
 	)
-	retryFail, err := util.RetryArithmeticBackoff(postFunc, 10, 1)
+	retryFail, err := util.RetryArithmeticBackoff(postFunc, 10, 1*time.Second)
 	if retryFail {
 		return fmt.Errorf("incrementing value failed after %v tries: %v", 10, err)
 	}
